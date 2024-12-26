@@ -6,6 +6,14 @@ class GameScene extends Phaser.Scene {
             width: 2400,
             height: 2400
         };
+        this.dots = {};
+        this.itemsConfig = {
+            player: { size: 1 },
+            enemy: { size: 1 },
+            fuel: { size: 1, density: 11 },
+            dot: { size: 1, density: 11 },
+            case: { size: 1, density: 11 },
+        }
         this.lastUpdateTime = 0
         this.worldBounds = {
             minX: 0,
@@ -27,19 +35,48 @@ class GameScene extends Phaser.Scene {
         };
 
 
+        this.collectibleTypes = {
+            fuel: {
+                sprite: 'fuel',
+                scale: 0.75,
+                density: 11, // Number of obstacles to create
+                distribution: {
+                    minDistance: 100, // Minimum distance between obstacles
+                    margin: 50 // Margin from edges
+                }
+            },
+            case: {
+                sprite: 'case',
+                scale: 0.2,
+                density: 10,
+                distribution: {
+                    minDistance: 120,
+                    margin: 50
+                }
+            }
+        };
         this.obstacleTypes = {
             tree: {
                 sprite: 'tree',
-                scale: 0.2,
+                scale: 0.75,
                 density: 10, // Number of obstacles to create
                 distribution: {
                     minDistance: 100, // Minimum distance between obstacles
                     margin: 50 // Margin from edges
                 }
             },
-            boulder: {
-                sprite: 'boulder',
-                scale: 0.2,
+            missile: {
+                sprite: 'missile',
+                scale: 0.75,
+                density: 10, // Number of obstacles to create
+                distribution: {
+                    minDistance: 100, // Minimum distance between obstacles
+                    margin: 50 // Margin from edges
+                }
+            },
+            rock: {
+                sprite: 'rock',
+                scale: 0.75,
                 density: 8,
                 distribution: {
                     minDistance: 120,
@@ -81,7 +118,7 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        ['car', 'fuel', 'case', 'map', 'tree', 'boulder', 'enemy'].forEach(asset => {
+        ['car', 'enemy', 'map', 'fuel', 'case', 'tree', 'boulder'].forEach(asset => {
             this.load.image(asset, `assets/${asset}.png`);
         });
     }
@@ -106,8 +143,8 @@ class GameScene extends Phaser.Scene {
 
         // Add random dots
         const dots = this.add.graphics();
-        dots.fillStyle(0x000000, 0.3);
-        for (let i = 0; i < 1000; i++) {
+        dots.fillStyle(0x000000, this.itemsConfig.dot.size);
+        for (let i = 0; i < this.itemsConfig.dot.density; i++) {
             const x = Phaser.Math.Between(50, this.worldSize.width - 50);
             const y = Phaser.Math.Between(50, this.worldSize.height - 50);
             dots.fillCircle(x, y, 2);
@@ -130,10 +167,10 @@ class GameScene extends Phaser.Scene {
             this.worldSize.width / 2,
             this.worldSize.height / 2,
             'car'
-        ).setScale(0.25);
+        ).setScale(this.itemsConfig.player.size);
 
         this.player.setCollideWorldBounds(true);
-        this.player.angle = -180;
+        this.player.angle = 180;
         this.cameras.main.startFollow(this.player, true, 1, 1);
     }
 
@@ -172,7 +209,7 @@ class GameScene extends Phaser.Scene {
                 break;
         }
 
-        const enemy = this.enemies.create(x, y, 'enemy').setScale(0.25);
+        const enemy = this.enemies.create(x, y, 'enemy').setScale(this.itemsConfig.enemy.size);
         enemy.angle = angle;
         enemy.setVelocity(
             Math.cos(Phaser.Math.DegToRad(angle)) * this.enemyConfig.speed * 100,
@@ -213,21 +250,21 @@ class GameScene extends Phaser.Scene {
     initializeCollectibles() {
         this.collectibles = this.physics.add.group();
         const placedPositions = [];
-        const minDistance = 100; // Minimum distance between collectibles
+        // Place obstacles for each type
+        Object.entries(this.collectibleTypes).forEach(([type, config]) => {
 
-        Array.from({ length: 11 }, () => {
-            const type = Math.random() > 0.5 ? 'fuel' : 'case';
-            const position = this.getValidCollectiblePosition(50, minDistance, placedPositions);
+            const position = this.getValidCollectiblePosition(config.distribution.margin, config.distribution.minDistance, placedPositions);
 
             if (position) {
                 this.collectibles.create(position.x, position.y, type)
-                    .setScale(0.125);
+                    .setScale(config.scale);
                 placedPositions.push(position);
             }
         });
 
         this.physics.add.overlap(this.player, this.collectibles, this.collectItem, null, this);
     }
+
     getValidCollectiblePosition(margin, minDistance, existingPositions) {
         const maxAttempts = 50;
         let attempts = 0;
@@ -537,8 +574,7 @@ class GameScene extends Phaser.Scene {
             let position = this.getValidObstaclePosition(margin, minDistance, placedPositions);
 
             if (position) {
-                const obstacle = this.obstacles.create(position.x, position.y, sprite)
-                    .setScale(scale);
+                const obstacle = this.obstacles.create(position.x, position.y, sprite).setScale(scale);
                 placedPositions.push(position);
             }
         }
