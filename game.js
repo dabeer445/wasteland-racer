@@ -103,15 +103,24 @@ class GameScene extends Phaser.Scene {
     initializeWorld() {
         this.physics.world.setBounds(0, 0, this.worldSize.width, this.worldSize.height);
         const background = this.add.rectangle(0, 0, this.worldSize.width, this.worldSize.height, 0xFFFF00).setOrigin(0, 0);
-        // this.add.strokeRect(0, 0, this.worldSize.width, this.worldSize.height).lineStyle(8, 0xFF0000).setOrigin(0, 0);
+
+        // Add random dots
+        const dots = this.add.graphics();
+        dots.fillStyle(0x000000, 0.3);
+        for (let i = 0; i < 1000; i++) {
+            const x = Phaser.Math.Between(50, this.worldSize.width - 50);
+            const y = Phaser.Math.Between(50, this.worldSize.height - 50);
+            dots.fillCircle(x, y, 2);
+        }
 
         // Add visible boundary
         const boundary = this.add.graphics();
-        boundary.lineStyle(8, 0xFF0000); // 8px thick red line
+        boundary.lineStyle(8, 0xFF0000);
         boundary.strokeRect(0, 0, this.worldSize.width, this.worldSize.height);
 
-        // Make boundary move with world
+        // Make boundary and dots move with world
         this.boundary = boundary;
+        this.dots = dots;
 
         this.cameras.main.setBounds(0, 0, this.worldSize.width, this.worldSize.height);
     }
@@ -374,6 +383,8 @@ class GameScene extends Phaser.Scene {
                 }
                 this.boundary.x -= dx;
                 this.boundary.y -= dy;
+                this.dots.x -= dx;
+                this.dots.y -= dy;
                 console.log(this.worldOffset)
             }
 
