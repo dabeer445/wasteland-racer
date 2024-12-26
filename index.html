@@ -1,16 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tranz Am Game</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
-  Hello world
-  <script src="script.js"></script>
+    <div class="container">
+        <div id="sidebar">
+            <div class="title">TRANZ AM</div>
+
+            <div class="stat" id="score">Score: 0</div>
+            <div class="map">
+                <img src="assets/map.png">
+            </div>
+            <div class="row">
+                <div class="case-counter">
+                    <img src="assets/case.png" alt="Case" class="case-icon">
+                    <span id="cases-collected">0</span>
+                </div>
+                <div class="case-counter">
+                    <img src="assets/case.png" alt="Case" class="case-icon">
+                    <span id="cases-collected">0</span>
+                </div>
+            </div>
+            <div class="gauge-container">
+                <div class="gauge">
+                    <div class="gauge-label">
+                        Speed: <span class="stat" id="speed-text">0</span>
+                    </div>
+                    <div class="gauge-bar">
+                        <div id="speed-fill" class="gauge-fill"></div>
+                    </div>
+                </div>
+
+                <div class="gauge">
+                    <div class="gauge-label">
+                        Temperature:
+                        <span class="stat" id="temp-text">50°C</span>
+                    </div>
+                    <div class="gauge-bar">
+                        <div id="temp-fill" class="gauge-fill"></div>
+                    </div>
+
+                </div>
+
+                <div class="gauge">
+                    <div class="gauge-label">
+                        Fuel:
+                        <span class="stat" id="fuel-text">100%</span>
+                    </div>
+                    <div class="gauge-bar">
+                        <div id="fuel-fill" class="gauge-fill"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="row lifes">
+                <img src=" assets/car.png" alt="Life" class="life-icon">
+                <img src=" assets/car.png" alt="Life" class="life-icon">
+                <img src=" assets/car.png" alt="Life" class="life-icon">
+            </div>
+
+            <!-- <div class="controls">
+                <div>Controls:</div>
+                <div><span class="control-key">Q</span> Accelerate</div>
+                <div><span class="control-key">A</span> Brake</div>
+                <div><span class="control-key">O</span> Turn Left</div>
+                <div><span class="control-key">P</span> Turn Right</div>
+            </div> -->
+        </div>
+        <!-- Game Container -->
+        <div id="game-container"></div>
+    </div>
+
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="UKMap.js"></script>
+    <script src="game.js"></script>
+    <!-- <script type="text/javascript">
+        const config = {
+            type: Phaser.AUTO,
+            parent: 'game-container',
+            width: 824, // 1024 - 200 (sidebar width)
+            height: 768,
+            backgroundColor: '#FFFF00',
+            scene: GameScene,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: {y: 0},
+                    debug: true
+                }
+            }
+        };
+
+        // Initialize game
+        new Phaser.Game(config);
+    </script> -->
 </body>
 
 </html>
