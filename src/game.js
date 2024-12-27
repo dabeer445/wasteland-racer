@@ -1,0 +1,33 @@
+// game.js
+import { GameScene } from "./scenes/GameScene.js";
+import { PauseScene } from "./scenes/PauseScene.js";
+import { LoadingScene } from "./scenes/LoadingScene.js";
+import { GameOverScene } from "./scenes/GameOverScene.js";
+import { MenuScene } from "./scenes/MenuScene.js";
+import { GameState } from "./GameState.js";
+
+const config = {
+  type: Phaser.AUTO,
+  width: 824, // 1024 - 200 (sidebar width)
+  height: 768,
+  backgroundColor: "#FFFF00",
+  parent: "game-container",
+  physics: {
+    default: "arcade",
+    arcade: {
+      gravity: { y: 0 },
+      debug: true,
+    },
+  },
+  fps: {
+    target: 60,
+    forceSetTimeOut: true,
+  },
+  scene: [LoadingScene, MenuScene, GameScene, PauseScene, GameOverScene],
+};
+// Initialize shared game state
+const gameState = new GameState();
+
+window.onload = () => {
+  const game = new Phaser.Game(config);
+};

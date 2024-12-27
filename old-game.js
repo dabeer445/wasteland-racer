@@ -11,7 +11,7 @@ class GameScene extends Phaser.Scene {
             player: { size: 1 },
             enemy: { size: 1 },
             fuel: { size: 1, density: 11 },
-            dot: { size: 1, density: 11 },
+            dot: { size: 1, density: 1000 },
             case: { size: 1, density: 11 },
         }
         this.lastUpdateTime = 0
@@ -79,7 +79,7 @@ class GameScene extends Phaser.Scene {
                 scale: 0.75,
                 density: 8,
                 distribution: {
-                    minDistance: 120,
+                    minDistance: 100,
                     margin: 50
                 }
             }
@@ -92,7 +92,7 @@ class GameScene extends Phaser.Scene {
             speed: 0,
             maxSpeed: 10,
             acceleration: 0.2,
-            deceleration: 0.05,
+            deceleration: 0.2,
             canRotate: true,
             casesCollected: 0,
             lives: 3,
@@ -118,7 +118,7 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        ['car', 'enemy', 'map', 'fuel', 'case', 'tree', 'boulder'].forEach(asset => {
+        ['car', 'enemy', 'map', ...Object.keys(this.collectibleTypes), ...Object.keys(this.obstacleTypes)].forEach(asset => {
             this.load.image(asset, `assets/${asset}.png`);
         });
     }
@@ -422,7 +422,6 @@ class GameScene extends Phaser.Scene {
                 this.boundary.y -= dy;
                 this.dots.x -= dx;
                 this.dots.y -= dy;
-                console.log(this.worldOffset)
             }
 
         }

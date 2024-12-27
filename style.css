@@ -105,7 +105,7 @@ body {
 }
 
 .case-icon {
-  height: 100px;
+  height: 70px;
   object-fit: contain;
 }
 
@@ -121,13 +121,15 @@ body {
 
 .life-icon {
   height: 65px;
+  transform: rotate(180deg);
   object-fit: contain;
+  padding: 5px;
 }
 
-.map{
+.map {
   height: 250px;
   padding: 10px 0;
 }
 .map > img {
-  height: 250px
+  height: 250px;
 }
