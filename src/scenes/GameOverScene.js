@@ -1,5 +1,4 @@
 // Create new GameOverScene.js
-import { GameState } from "../GameState.js";
 class GameOverScene extends Phaser.Scene {
   constructor() {
     super({ key: "GameOverScene" });
@@ -32,8 +31,9 @@ class GameOverScene extends Phaser.Scene {
       const gameScene = this.scene.get("GameScene");
       gameScene.gameState.reset();
       this.scene.stop("GameScene");
+      this.scene.stop('GameOverScene');
       this.scene.start("GameScene");
-      this.scene.stop();
+
     });
   }
 }

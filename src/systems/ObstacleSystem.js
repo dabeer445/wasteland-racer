@@ -23,31 +23,7 @@ class ObstacleSystem {
     obstacle.damage = config.damage;
     return obstacle;
   }
-
-  //   handleCollision(player, obstacle) {
-  //     const speed = this.gameState.get("speed");
-  //     const damage = obstacle.damage * (speed / 10); // Scale damage with speed
-
-  //     this.gameState.update("lives", this.gameState.get("lives") - 1);
-  //     this.scene.cameras.main.shake(200, 0.01);
-
-  //     // Knockback effect
-  //     const angle = Phaser.Math.Angle.Between(
-  //       obstacle.x,
-  //       obstacle.y,
-  //       player.x,
-  //       player.y
-  //     );
-  //     player.setVelocity(Math.cos(angle) * 300, Math.sin(angle) * 300);
-
-  //     if (this.gameState.get("lives") <= 0) {
-  //       this.scene.events.emit("gameOver");
-  //     }
-  //   }
-
   handleCollision(player, obstacle) {
-    this.scene.events.emit("playerHit");
-
     // Move all objects in scene AWAY from obstacle
     const angle = Phaser.Math.Angle.Between(
       obstacle.x,
@@ -66,7 +42,12 @@ class ObstacleSystem {
       obj.x += Math.cos(angle) * pushDistance;
       obj.y += Math.sin(angle) * pushDistance;
     });
+    const collisionPoint = {
+      x: (player.x + obstacle.x) / 2,
+      y: (player.y + obstacle.y) / 2,
+    };
 
+    this.scene.events.emit("playerHit", collisionPoint);
   }
 
   setupCollisions(player) {
@@ -78,5 +59,6 @@ class ObstacleSystem {
       this
     );
   }
+  
 }
 export { ObstacleSystem };

@@ -33,7 +33,12 @@ class EnemySystem {
 
   handleCollision(player, enemy) {
     enemy.destroy();
-    this.scene.events.emit("playerHit");
+    const collisionPoint = {
+      x: (player.x + enemy.x) / 2,
+      y: (player.y + enemy.y) / 2,
+    };
+
+    this.scene.events.emit("playerHit", collisionPoint);
   }
   spawnEnemy() {
     const { width, height } = this.scene.physics.world.bounds;

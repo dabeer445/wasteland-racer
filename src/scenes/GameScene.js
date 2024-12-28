@@ -19,11 +19,32 @@ class GameScene extends BaseScene {
     this.physics.world.setBounds(0, 0, 2400, 2400);
     this.cameras.main.setBounds(0, 0, 2400, 2400);
     this.addBackground();
+
+    //Initialize sounds
+    this.sounds = {
+      accelerate: this.sound.add("accelerate", { loop: true }),
+      braking: this.sound.add("braking", { loop: false }),
+      crash: this.sound.add("crash", { loop: false }),
+      idle: this.sound.add("idle", { loop: true }),
+      refuel: this.sound.add("refuel", { loop: false }),
+      topspeed: this.sound.add("topspeed", { loop: true, volume: 5 }),
+    };
+    this.anims.create({
+      key: "explode",
+      frames: this.anims.generateFrameNumbers("explosion", {
+        start: 0,
+        end: 7,
+      }),
+      frameRate: 16,
+      repeat: 0,
+    });
+
     // Initialize systems
     this.playerSystem = new PlayerSystem(this, this.gameState);
     this.collectibleSystem = new CollectibleSystem(this, this.gameState);
     this.obstacleSystem = new ObstacleSystem(this, this.gameState);
     this.enemySystem = new EnemySystem(this);
+    this.explosions = this.add.group();
 
     // Setup collisions
     this.collectibleSystem.setupCollisions(this.playerSystem.player);
@@ -51,6 +72,7 @@ class GameScene extends BaseScene {
 
     this.registerEvents();
   }
+
   registerEvents() {
     this.events.removeListener("gameOver");
     this.events.on("gameOver", () => {
@@ -58,10 +80,17 @@ class GameScene extends BaseScene {
     });
 
     this.events.removeListener("playerHit");
-    this.events.on("playerHit", () => {
+    this.events.on("playerHit", (collisionPoint) => {
       // Reset speed
       this.gameState.update("speed", 0);
-      this.cameras.main.shake(200, 0.01);
+      this.sounds.crash.play();
+      this.cameras.main.shake(200, 0.02);
+
+      const explosion = this.add
+        .sprite(collisionPoint.x, collisionPoint.y, "explosion")
+        .play("explode", true);
+      explosion.on("animationcomplete", () => explosion.destroy());
+      this.explosions.add(explosion);
 
       const currentLives = this.gameState.get("lives");
       console.log("Current lives before hit:", currentLives); // Debug log
@@ -156,6 +185,17 @@ class GameScene extends BaseScene {
       "fuel",
       Math.max(0, currentFuel - fuelConsumptionRate)
     );
+  }
+
+  shutdown() {
+    // Clean up groups and systems
+    if (this.explosions) this.explosions.destroy(true);
+    if (this.playerSystem) this.playerSystem.destroy();
+    if (this.collectibleSystem)
+      this.collectibleSystem.collectibles.destroy(true);
+    if (this.obstacleSystem) this.obstacleSystem.obstacles.destroy(true);
+    if (this.enemySystem) this.enemySystem.enemies.destroy(true);
+    this.events.removeAllListeners();
   }
 
   getTempChangeRate(speed) {

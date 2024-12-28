@@ -1,4 +1,6 @@
 // Player management
+import { SoundManager } from "../managers/SoundManager.js";
+import { MovementManager } from "../managers/MovementManager.js";
 class PlayerSystem {
   constructor(scene, gameState) {
     this.scene = scene;
@@ -6,6 +8,8 @@ class PlayerSystem {
     this.controls = {};
     this.setupPlayer();
     this.setupControls();
+    this.soundManager = new SoundManager(scene.sounds);
+    this.movementManager = new MovementManager(this.player, gameState, scene);
   }
 
   setupPlayer() {
@@ -34,53 +38,11 @@ class PlayerSystem {
   }
 
   update() {
-    this.handleMovement();
-    this.updatePhysics();
-  }
-
-  handleMovement() {
-    // Player movement logic
-  }
-  updatePhysics() {
     const currentSpeed = this.gameState.get("speed") || 0;
     const maxSpeed = 10;
-    const acceleration = 0.2;
-    const deceleration = 0.2;
 
-    if (this.controls.left.isDown) {
-      this.player.angle -= 3;
-    }
-    if (this.controls.right.isDown) {
-      this.player.angle += 3;
-    }
-
-    let newSpeed = currentSpeed;
-    if (this.controls.accelerate.isDown && currentSpeed < maxSpeed) {
-      newSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
-    } else if (currentSpeed > 0) {
-      newSpeed = Math.max(currentSpeed - deceleration, 0);
-    }
-
-    this.gameState.update("speed", newSpeed);
-
-    if (newSpeed > 0) {
-      const rad = Phaser.Math.DegToRad(this.player.angle + 90);
-      const dx = Math.cos(rad) * newSpeed;
-      const dy = Math.sin(rad) * newSpeed;
-      this.scene.background.tilePositionX += dx;
-      this.scene.background.tilePositionY += dy;
-
-      [
-        ...this.scene.collectibleSystem.collectibles.getChildren(),
-        ...this.scene.obstacleSystem.obstacles.getChildren(),
-        ...this.scene.enemySystem.enemies.getChildren(),
-      ].forEach((obj) => {
-        if (obj) {
-          obj.x -= dx;
-          obj.y -= dy;
-        }
-      });
-    }
+    this.soundManager.playEngineSound(currentSpeed, maxSpeed, this.controls);
+    this.movementManager.updateMovement(this.controls,maxSpeed);
   }
 }
 export { PlayerSystem };

@@ -11,12 +11,14 @@ class MenuScene extends Phaser.Scene {
     this.add
       .text(width / 2, height / 3, "Wasteland Racer", {
         fontSize: "64px",
+        color: "#000",
       })
       .setOrigin(0.5);
 
     const startButton = this.add
       .text(width / 2, height / 2, "Start Game", {
         fontSize: "32px",
+        color: "#00ff00",
       })
       .setOrigin(0.5)
       .setInteractive();

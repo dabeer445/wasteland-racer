@@ -10,6 +10,7 @@ class Collectible extends Phaser.Physics.Arcade.Sprite {
 
   collect() {
     this.emit("collected", this);
+    this.config.onCollect();
     if (this.type == "case") {
       this.destroy();
     }
@@ -32,6 +33,9 @@ class CollectibleSystem {
             "fuel",
             Math.min(100, this.gameState.get("fuel") + 25)
           );
+          if (!this.scene.sounds.refuel.isPlaying) {
+            this.scene.sounds.refuel.play();
+          }
           this.gameState.update("score", this.gameState.get("score") + 10);
         },
       },
@@ -54,10 +58,6 @@ class CollectibleSystem {
     const collectible = new Collectible(this.scene, x, y, type, config);
     this.scene.add.existing(collectible); // Add this line
     this.collectibles.add(collectible);
-
-    collectible.on("collected", () => {
-      config.onCollect();
-    });
 
     return collectible;
   }

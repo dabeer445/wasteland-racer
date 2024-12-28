@@ -12,10 +12,10 @@ class LoadingScene extends Phaser.Scene {
       //players
       "car",
       "enemy",
-      //collectibles      
+      //collectibles
       "fuel",
       "case",
-      //obstacles      
+      //obstacles
       "tree",
       "rock",
       "missile",
@@ -23,6 +23,28 @@ class LoadingScene extends Phaser.Scene {
       "building",
     ].forEach((asset) => {
       this.load.image(asset, `assets/${asset}.png`);
+    });
+
+    //Add audio assets
+    const audioFiles = [
+      "accelerate",
+      "braking",
+      "crash",
+      "idle",
+      "refuel",
+      "topspeed",
+    ];
+    audioFiles.forEach((audio) => {
+      this.load.audio(audio, `assets/audio/${audio}.mp3`);
+    });
+
+    //Add Sprtiesheet assets
+    const spriteSheets = ["explosion"];
+    spriteSheets.forEach((spriteSheet) => {
+      this.load.spritesheet(spriteSheet, `assets/${spriteSheet}.png`, {
+        frameWidth: 75,
+        frameHeight: 49
+        });
     });
 
     // Loading bar
@@ -40,7 +62,7 @@ class LoadingScene extends Phaser.Scene {
   }
 
   create() {
-    this.scene.start('MenuScene');
+    this.scene.start("MenuScene");
     // this.scene.start("GameScene");
   }
 }
