@@ -18,11 +18,14 @@ class MovementManager {
 
   calculateSpeed(controls, maxSpeed) {
     const currentSpeed = this.gameState.get("speed") || 0;
-    const acceleration = 0.2;
-    const deceleration = 0.2;
+    const acceleration = 0.15;
+    const deceleration = 0.13;
 
     if (controls.accelerate.isDown && currentSpeed < maxSpeed) {
       return Math.min(currentSpeed + acceleration, maxSpeed);
+    }
+    if (controls.deceleration.isDown && currentSpeed > 0) {
+      return Math.max(currentSpeed - 2 * deceleration, 0);
     }
     return Math.max(currentSpeed - deceleration, 0);
   }
