@@ -15,10 +15,13 @@ class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    this.add.sprite(width / 2, height / 2, "splashScreen");
+
     const startButton = this.add
       .text(width / 2, height / 2, "Start Game", {
-        fontSize: "32px",
-        color: "#00ff00",
+        fontSize: "64px",
+        color: "#fff",
+        stroke: "2"
       })
       .setOrigin(0.5)
       .setInteractive();

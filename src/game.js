@@ -8,7 +8,7 @@ import { GameState } from "./GameState.js";
 
 const config = {
   type: Phaser.AUTO,
-  width: 824, // 1024 - 200 (sidebar width)
+  width: 768, 
   height: 768,
   backgroundColor: "#FFFF00",
   parent: "game-container",

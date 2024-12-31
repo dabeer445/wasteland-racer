@@ -8,6 +8,7 @@ class LoadingScene extends Phaser.Scene {
     // Load all assets
     [
       //bg
+      "splashScreen",
       "dot_pattern",
       //players
       "car",
