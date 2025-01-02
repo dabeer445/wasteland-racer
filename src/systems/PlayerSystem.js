@@ -15,6 +15,7 @@ class PlayerSystem {
   setupPlayer() {
     // Create player sprite
     this.player = this.scene.physics.add.sprite(0, 0, "car");
+    this.player.setDepth(5);
     this.player.setCollideWorldBounds(true);
     this.player.angle = 180;
 

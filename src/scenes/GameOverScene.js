@@ -1,4 +1,3 @@
-// Create new GameOverScene.js
 class GameOverScene extends Phaser.Scene {
   constructor() {
     super({ key: "GameOverScene" });

@@ -1,11 +1,130 @@
+import { regionPaths } from "../../regionPath.js";
+
+function parseSVGPathToPolygon(path) {
+  const polygons = [];
+  let currentPolygon = [];
+  let currentX = 0,
+    currentY = 0;
+  let startX = 0,
+    startY = 0;
+  const jumpThreshold = 50;
+
+  const parts = path.trim().split(/(?=[mMlLhHvVcCsSqQtTaAzZ])/);
+
+  parts.forEach((part) => {
+    const command = part[0];
+    const numbers = part
+      .slice(1)
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
+
+    switch (command) {
+      case "m":
+      case "M": {
+        const isRelative = command === "m";
+        const [x, y] = numbers;
+
+        if (Math.abs(x) > jumpThreshold || Math.abs(y) > jumpThreshold) {
+          if (currentPolygon.length > 0) {
+            polygons.push(currentPolygon);
+            currentPolygon = [];
+          }
+        }
+
+        if (isRelative) {
+          currentX += x;
+          currentY += y;
+        } else {
+          currentX = x;
+          currentY = y;
+        }
+
+        startX = currentX;
+        startY = currentY;
+        currentPolygon.push([currentX, currentY]);
+
+        for (let i = 2; i < numbers.length; i += 2) {
+          currentX += numbers[i];
+          currentY += numbers[i + 1];
+          currentPolygon.push([currentX, currentY]);
+        }
+        break;
+      }
+
+      case "l":
+      case "L": {
+        const isRelative = command === "l";
+        for (let i = 0; i < numbers.length; i += 2) {
+          if (isRelative) {
+            currentX += numbers[i];
+            currentY += numbers[i + 1];
+          } else {
+            currentX = numbers[i];
+            currentY = numbers[i + 1];
+          }
+          currentPolygon.push([currentX, currentY]);
+        }
+        break;
+      }
+
+      case "z":
+      case "Z":
+        if (currentPolygon.length > 0) {
+          currentPolygon.push([startX, startY]);
+          polygons.push(currentPolygon);
+          currentPolygon = [];
+        }
+        break;
+    }
+  });
+
+  if (currentPolygon.length > 0) {
+    polygons.push(currentPolygon);
+  }
+
+  return polygons.reduce(
+    (largest, current) => (current.length > largest.length ? current : largest),
+    polygons[0]
+  );
+}
+function getBoundingBox(polygon) {
+  const xs = polygon.points.map((p) => p.x);
+  const ys = polygon.points.map((p) => p.y);
+  return {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+    centerX: Math.min(...xs) + (Math.max(...xs) - Math.min(...xs)) / 2,
+    centerY: Math.min(...ys) + (Math.max(...ys) - Math.min(...ys)) / 2,
+    left: Math.min(...xs),
+    right: Math.max(...xs),
+    top: Math.min(...ys),
+    bottom: Math.max(...ys),
+  };
+}
 class RegionSystem {
   constructor(scene, gameState) {
     this.scene = scene;
     this.gameState = gameState;
     this.regions = [];
+    this.scale = 10;
     this.setupRegions();
     this.setupDebugGraphics();
+    // this.worldBoundsPoly = this.createWorldBoundsPolygon();
   }
+
+  createWorldBoundsPolygon() {
+    // Combine all region points
+    const allPoints = this.regions.flatMap((region) => region.polygon.points);
+
+    // Get convex hull to create boundary
+    return new Phaser.Geom.Polygon(
+      Phaser.Geom.Polygon.GetConvexHull(allPoints)
+    );
+  }
+
   cleanup() {
     // Clean up debug graphics
     if (this.debugContainer) {
@@ -14,86 +133,91 @@ class RegionSystem {
     if (this.debugGraphics) {
       this.debugGraphics.destroy();
     }
-    this.debugTexts.forEach(text => text.destroy());
+    this.debugTexts.forEach((text) => text.destroy());
     this.debugTexts = [];
 
     // Clean up regions
-    this.regions.forEach(region => region.destroy());
+    this.regions.forEach((region) => region.destroy());
     this.regions = [];
   }
 
-
   setupRegions() {
-    const regions = [
-      { name: "Wasteland Alpha", x: 0, y: 0, width: 400, height: 600 },
-      { name: "Ruins Beta", x: 400, y: 0, width: 400, height: 600 },
-      { name: "Dead Zone Charlie", x: 800, y: 0, width: 400, height: 1200 },
-      { name: "Danger Delta", x: 1200, y: 0, width: 400, height: 1200 },
-      { name: "Echo Valley", x: 0, y: 600, width: 400, height: 600 },
-      { name: "Forgotten Foxtrot", x: 400, y: 600, width: 400, height: 600 },
-      { name: "Ghost Gulf", x: 0, y: 1200, width: 800, height: 600 },
-      { name: "Hunter's Haven", x: 800, y: 1200, width: 400, height: 1200 },
-      { name: "Inferno Isle", x: 1200, y: 1200, width: 400, height: 1200 },
-      { name: "Junkyard Junction", x: 0, y: 1800, width: 400, height: 600 },
-      { name: "Killer Keep", x: 400, y: 1800, width: 400, height: 600 },
-    ];
-
-    regions.forEach((region) => {
-      const zone = this.scene.add.zone(
-        region.x + region.width / 2,
-        region.y + region.height / 2,
-        region.width,
-        region.height
-      );
-
-      zone.regionX = region.x;
-      zone.regionY = region.y;
-      zone.regionWidth = region.width;
-      zone.regionHeight = region.height;
-      zone.name = region.name;
-      this.regions.push(zone);
+    Object.entries(regionPaths).forEach(([name, details]) => {
+      this.regions.push({
+        name: details.name,
+        polygon: new Phaser.Geom.Polygon(
+          parseSVGPathToPolygon(details.path).map(([x, y]) => ({
+            x: x * this.scale,
+            y: y * this.scale,
+          }))
+        ),
+        color: details.color,
+      });
     });
   }
 
   setupDebugGraphics() {
     this.debugContainer = this.scene.add.container(0, 0);
+    this.debugContainer.setDepth(1);
     this.debugGraphics = this.scene.add.graphics();
     this.debugContainer.add(this.debugGraphics);
     this.debugTexts = [];
-
     this.drawRegions();
   }
 
   drawRegions() {
     this.debugGraphics.clear();
-    this.debugGraphics.lineStyle(2, 0xff0000);
-
     this.debugTexts.forEach((text) => text.destroy());
     this.debugTexts = [];
 
-    this.regions.forEach((region) => {
-      this.debugGraphics.strokeRect(
-        region.regionX,
-        region.regionY,
-        region.regionWidth,
-        region.regionHeight
-      );
+    // this.regions.forEach((region) => {
+    //   this.debugGraphics.lineStyle(4, region.color || 0xff0000);
+    //   this.debugGraphics.strokePoints(region.polygon.points, true);
 
-      const text = this.scene.add
-        .text(
-          region.regionX + region.regionWidth / 2,
-          region.regionY + region.regionHeight / 2,
-          region.name,
-          {
-            font: "16px Arial",
-            fill: "#ff0000",
-          }
-        )
-        .setOrigin(0.5);
+    //   const bounds = getBoundingBox(region.polygon);
+    //   const text = this.scene.add.text(
+    //     bounds.centerX,
+    //     bounds.centerY,
+    //     region.name,
+    //     {
+    //       font: "16px Arial",
+    //       fill: "#ff0000",
+    //     }
+    //   );
+
+    //   this.debugContainer.add(text);
+    //   this.debugTexts.push(text);
+    // });
+
+
+    this.regions.forEach(region => {
+      this.debugGraphics.lineStyle(2, region.color || 0xff0000);
+      this.debugGraphics.fillStyle(region.color || 0xff0000, 0.5); // 0.2 is alpha/opacity
+      this.debugGraphics.beginPath();
+      this.debugGraphics.moveTo(region.polygon.points[0].x, region.polygon.points[0].y);
+      region.polygon.points.forEach(point => {
+        this.debugGraphics.lineTo(point.x, point.y);
+      });
+      this.debugGraphics.closePath();
+      this.debugGraphics.fillPath();
+      this.debugGraphics.strokePath();
+
+      const bounds = getBoundingBox(region.polygon);
+      const text = this.scene.add.text(
+        bounds.centerX,
+        bounds.centerY,
+        region.name,
+        {
+          font: "16px Arial",
+          fill: "#ff0000",
+        }
+      );
 
       this.debugContainer.add(text);
       this.debugTexts.push(text);
-    });
+
+    }); 
+
   }
 
   update(playerWorldPos, worldOffset) {
@@ -112,27 +236,23 @@ class RegionSystem {
     this.gameState.update("currentRegion", "Unknown");
   }
 
-  isInRegion(position, region) {
-    return (
-      position.x >= region.regionX &&
-      position.x <= region.regionX + region.regionWidth &&
-      position.y >= region.regionY &&
-      position.y <= region.regionY + region.regionHeight
-    );
+  getRandomSpawnPoint() {
+    const region = Phaser.Utils.Array.GetRandom(this.regions);
+    const bounds = getBoundingBox(region.polygon);
+    let point;
+
+    do {
+      point = {
+        x: Phaser.Math.Between(bounds.left, bounds.right),
+        y: Phaser.Math.Between(bounds.top, bounds.bottom),
+      };
+    } while (!Phaser.Geom.Polygon.Contains(region.polygon, point.x, point.y));
+
+    return point;
   }
 
-  getRandomSpawnPoint() {
-    const randomRegion = Phaser.Utils.Array.GetRandom(this.regions);
-    return {
-      x: Phaser.Math.Between(
-        randomRegion.regionX + 50,
-        randomRegion.regionX + randomRegion.regionWidth - 50
-      ),
-      y: Phaser.Math.Between(
-        randomRegion.regionY + 50,
-        randomRegion.regionY + randomRegion.regionHeight - 50
-      ),
-    };
+  isInRegion(position, region) {
+    return Phaser.Geom.Polygon.Contains(region.polygon, position.x, position.y);
   }
 }
 

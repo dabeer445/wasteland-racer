@@ -3,10 +3,6 @@ class BaseScene extends Phaser.Scene {
     super(key);
   }
 
-  initializeUI() {
-    // Replace DOM elements with Phaser Text objects
-  }
-
   updateUI(gameState) {
     document.getElementById("score").textContent = `Score: ${gameState.score}`;
     document.getElementById("speed-text").textContent = `${Math.round(

@@ -16,14 +16,13 @@ class GameScene extends BaseScene {
     this.gameState = new GameState();
   }
   create() {
-
     if (super.create) {
       super.create();
     }
 
     // Initialize physics world
     if (!this.physics || !this.physics.world) {
-      console.warn('Physics system not initialized, reinitializing scene');
+      console.warn("Physics system not initialized, reinitializing scene");
       this.scene.restart();
       return;
     }
@@ -82,8 +81,6 @@ class GameScene extends BaseScene {
     if (this.enemySystem) {
       this.enemySystem.setupCollisions(this.playerSystem.player);
     }
-
-    this.initializeUI();
 
     // Set up pause functionality
 
@@ -248,11 +245,20 @@ class GameScene extends BaseScene {
     // Temperature
     const tempChangeRate = this.getTempChangeRate(currentSpeed);
     const currentTemp = this.gameState.get("temp");
-    this.gameState.update(
-      "temp",
-      Phaser.Math.Clamp(currentTemp + (tempChangeRate * delta) / 1000, 50, 130)
-    );
-
+    const newTemp = Phaser.Math.Clamp(currentTemp + (tempChangeRate * delta) / 1000, 50, 130);
+  
+    // Check if temperature hits critical level
+    if (newTemp >= 130 && currentTemp < 130) {
+      this.events.emit("playerHit", {
+        x: this.playerSystem.player.x,
+        y: this.playerSystem.player.y
+      });
+      // Reset temperature after damage
+      this.gameState.update("temp", 50);
+    } else {
+      this.gameState.update("temp", newTemp);
+    }
+    
     // Fuel
     const fuelConsumptionRate = this.getFuelConsumptionRate(currentSpeed);
     const currentFuel = this.gameState.get("fuel");
