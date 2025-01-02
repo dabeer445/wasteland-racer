@@ -56,5 +56,33 @@ class PlayerSystem {
     this.soundManager.playEngineSound(currentSpeed, maxSpeed, this.controls);
     this.movementManager.updateMovement(this.controls, maxSpeed);
   }
+
+  destroy() {
+    // Clean up sprite
+    if (this.player) {
+      this.player.destroy();
+    }
+
+    // Clean up sound manager
+    if (this.soundManager) {
+      Object.values(this.scene.sounds).forEach((sound) => {
+        if (sound.isPlaying) {
+          sound.stop();
+        }
+      });
+    }
+
+    // Clean up movement manager
+    if (this.movementManager) {
+      // MovementManager doesn't need explicit cleanup as it doesn't create any Phaser objects
+      this.movementManager = null;
+    }
+
+    // Clean up controls
+    if (this.controls) {
+      // Remove any event listeners if you have any
+      this.controls = null;
+    }
+  }
 }
 export { PlayerSystem };

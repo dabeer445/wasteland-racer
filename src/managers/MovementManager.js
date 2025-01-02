@@ -201,28 +201,62 @@ class MovementManager {
     }
   }
 
-  updateSceneElements(dx, dy) {
-    // Update background
-    this.scene.background.tilePositionX += dx;
-    this.scene.background.tilePositionY += dy;
+  // updateSceneElements(dx, dy) {
+  //   // Update background
+  //   this.scene.background.tilePositionX += dx;
+  //   this.scene.background.tilePositionY += dy;
 
-    // Get all game objects
-    const gameObjects = [
-      ...(this.scene.collectibleSystem?.collectibles?.getChildren() || []),
-      ...(this.scene.obstacleSystem?.obstacles?.getChildren() || []),
-      ...(this.scene.enemySystem?.enemies?.getChildren() || []),
-      ...(this.scene.explosions?.getChildren() || []),
-    ];
+  //   // Get all game objects
+  //   const gameObjects = [
+  //     ...(this.scene.collectibleSystem?.collectibles?.getChildren() || []),
+  //     ...(this.scene.obstacleSystem?.obstacles?.getChildren() || []),
+  //     ...(this.scene.enemySystem?.enemies?.getChildren() || []),
+  //     ...(this.scene.explosions?.getChildren() || []),
+  //   ];
+
+  //   // Update positions relative to world movement
+  //   gameObjects.forEach((obj) => {
+  //     if (obj && obj.x !== undefined && obj.y !== undefined) {
+  //       obj.x -= dx;
+  //       obj.y -= dy;
+  //     }
+  //   });
+  // }
+  updateSceneElements(dx, dy) {
+    // Update background if it exists
+    if (this.scene.background) {
+      this.scene.background.tilePositionX += dx;
+      this.scene.background.tilePositionY += dy;
+    }
+
+    // Get all game objects safely
+    const gameObjects = [];
+    
+    try {
+      if (this.scene.collectibleSystem?.collectibles) {
+        gameObjects.push(...this.scene.collectibleSystem.collectibles.getChildren());
+      }
+      if (this.scene.obstacleSystem?.obstacles) {
+        gameObjects.push(...this.scene.obstacleSystem.obstacles.getChildren());
+      }
+      if (this.scene.enemySystem?.enemies) {
+        gameObjects.push(...this.scene.enemySystem.enemies.getChildren());
+      }
+      if (this.scene.explosions) {
+        gameObjects.push(...this.scene.explosions.getChildren());
+      }
+    } catch (error) {
+      console.warn('Some game objects not available during scene transition');
+    }
 
     // Update positions relative to world movement
-    gameObjects.forEach((obj) => {
+    gameObjects.forEach(obj => {
       if (obj && obj.x !== undefined && obj.y !== undefined) {
         obj.x -= dx;
         obj.y -= dy;
       }
     });
   }
-
   screenToWorld(screenX, screenY) {
     return {
       x: screenX + this.worldOffset.x,

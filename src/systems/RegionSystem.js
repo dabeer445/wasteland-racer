@@ -6,6 +6,22 @@ class RegionSystem {
     this.setupRegions();
     this.setupDebugGraphics();
   }
+  cleanup() {
+    // Clean up debug graphics
+    if (this.debugContainer) {
+      this.debugContainer.destroy();
+    }
+    if (this.debugGraphics) {
+      this.debugGraphics.destroy();
+    }
+    this.debugTexts.forEach(text => text.destroy());
+    this.debugTexts = [];
+
+    // Clean up regions
+    this.regions.forEach(region => region.destroy());
+    this.regions = [];
+  }
+
 
   setupRegions() {
     const regions = [
