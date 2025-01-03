@@ -3,10 +3,6 @@ class BaseScene extends Phaser.Scene {
     super(key);
   }
 
-  initializeUI() {
-    // Replace DOM elements with Phaser Text objects
-  }
-
   updateUI(gameState) {
     document.getElementById("score").textContent = `Score: ${gameState.score}`;
     document.getElementById("speed-text").textContent = `${Math.round(
@@ -41,9 +37,11 @@ class BaseScene extends Phaser.Scene {
     // Update fuel
     document.getElementById("fuel-fill").style.backgroundColor =
       gameState.fuel < 25 ? "#ff0000" : "#00ff00";
-    // Update cases collected
-    document.getElementById("cases-collected").textContent =
-      gameState.casesCollected;
+
+    // Update Region
+    document.getElementById(
+      "current-region"
+    ).textContent = `Current Region: ${gameState.currentRegion}`;
 
     // Update lives
     const lifeIcons = document.querySelectorAll(".life-icon");

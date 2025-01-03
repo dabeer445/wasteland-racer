@@ -1,4 +1,3 @@
-// Create loading scene for assets
 class LoadingScene extends Phaser.Scene {
   constructor() {
     super({ key: "LoadingScene" });

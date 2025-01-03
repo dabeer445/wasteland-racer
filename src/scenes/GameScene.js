@@ -2,6 +2,7 @@
 import { PlayerSystem } from "../systems/PlayerSystem.js";
 import { CollectibleSystem } from "../systems/CollectibleSystem.js";
 import { ObstacleSystem } from "../systems/ObstacleSystem.js";
+import { RegionSystem } from "../systems/RegionSystem.js";
 import { EnemySystem } from "../systems/EnemySystem.js";
 import { BaseScene } from "./BaseScene.js";
 import { GameState } from "../GameState.js";
@@ -15,10 +16,22 @@ class GameScene extends BaseScene {
     this.gameState = new GameState();
   }
   create() {
-    // Set up physics world bounds properly
+    if (super.create) {
+      super.create();
+    }
+
+    // Initialize physics world
+    if (!this.physics || !this.physics.world) {
+      console.warn("Physics system not initialized, reinitializing scene");
+      this.scene.restart();
+      return;
+    }
+
+    // Setup scene basics first
+    this.addBackground();
+
     this.physics.world.setBounds(0, 0, 2400, 2400);
     this.cameras.main.setBounds(0, 0, 2400, 2400);
-    this.addBackground();
 
     //Initialize sounds
     this.sounds = {
@@ -39,23 +52,35 @@ class GameScene extends BaseScene {
       repeat: 0,
     });
 
+    // Initialize player first
+    this.spawnPoint = { x: 384, y: 384 }; // Default spawn
+    this.playerSystem = new PlayerSystem(this, this.gameState, this.spawnPoint);
+
+    // Then region system
+    this.regionSystem = new RegionSystem(this, this.gameState);
+
+    // Finally update spawn point
+    this.spawnPoint = this.regionSystem.getRandomSpawnPoint();
+    this.playerSystem.respawnPlayer(this.spawnPoint);
+
     // Initialize systems
-    this.playerSystem = new PlayerSystem(this, this.gameState);
     this.collectibleSystem = new CollectibleSystem(this, this.gameState);
     this.obstacleSystem = new ObstacleSystem(this, this.gameState);
     this.enemySystem = new EnemySystem(this);
     this.explosions = this.add.group();
 
     // Setup collisions
-    this.collectibleSystem.setupCollisions(this.playerSystem.player);
-    this.obstacleSystem.setupCollisions(this.playerSystem.player);
-    this.enemySystem.setupCollisions(this.playerSystem.player);
-
-    // Spawn initial objects
-    this.spawnItems(this.collectibleSystem);
-    this.spawnItems(this.obstacleSystem);
-
-    this.initializeUI();
+    if (this.collectibleSystem) {
+      this.collectibleSystem.setupCollisions(this.playerSystem.player);
+      this.spawnItems(this.collectibleSystem);
+    }
+    if (this.obstacleSystem) {
+      this.obstacleSystem.setupCollisions(this.playerSystem.player);
+      this.spawnItems(this.obstacleSystem);
+    }
+    if (this.enemySystem) {
+      this.enemySystem.setupCollisions(this.playerSystem.player);
+    }
 
     // Set up pause functionality
 
@@ -71,6 +96,8 @@ class GameScene extends BaseScene {
     });
 
     this.registerEvents();
+
+    this.addDebugCenter();
   }
 
   registerEvents() {
@@ -114,6 +141,37 @@ class GameScene extends BaseScene {
       .setOrigin(0, 0);
   }
 
+  addDebugCenter() {
+    // Create a graphics object for the debug circle
+    this.debugCenter = this.add.graphics();
+    this.debugCenter.lineStyle(2, 0xff0000); // Red outline
+    this.debugCenter.strokeCircle(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      10
+    );
+
+    // Add a crosshair
+    this.debugCenter.lineStyle(1, 0xff0000);
+    // Horizontal line
+    this.debugCenter.lineBetween(
+      this.cameras.main.centerX - 15,
+      this.cameras.main.centerY,
+      this.cameras.main.centerX + 15,
+      this.cameras.main.centerY
+    );
+    // Vertical line
+    this.debugCenter.lineBetween(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY - 15,
+      this.cameras.main.centerX,
+      this.cameras.main.centerY + 15
+    );
+
+    // Make it stay fixed on screen
+    this.debugCenter.setScrollFactor(0);
+  }
+
   spawnItems(itemSystem) {
     for (const [type, config] of Object.entries(itemSystem.types)) {
       for (let i = 0; i < config.density; i++) {
@@ -130,18 +188,30 @@ class GameScene extends BaseScene {
     let attempts = 0;
 
     while (attempts < maxAttempts) {
+      // Get a random region
+      const randomRegion = Phaser.Utils.Array.GetRandom(
+        this.regionSystem.regions
+      );
+
+      // Generate position within region bounds
       const x = Phaser.Math.Between(
-        margin,
-        this.physics.world.bounds.width - margin
+        randomRegion.regionX + margin,
+        randomRegion.regionX + randomRegion.regionWidth - margin
       );
       const y = Phaser.Math.Between(
-        margin,
-        this.physics.world.bounds.height - margin
+        randomRegion.regionY + margin,
+        randomRegion.regionY + randomRegion.regionHeight - margin
       );
 
       // Check distance from player start position
-      const distanceFromStart = Phaser.Math.Distance.Between(x, y, 400, 300);
-      if (distanceFromStart > 200) {
+      const distanceFromStart = Phaser.Math.Distance.Between(
+        x,
+        y,
+        this.playerSystem.spawnPoint.x,
+        this.playerSystem.spawnPoint.y
+      );
+
+      if (distanceFromStart > minDistance) {
         return { x, y };
       }
       attempts++;
@@ -153,7 +223,9 @@ class GameScene extends BaseScene {
     if (!this.scene.isPaused()) {
       this.playerSystem.update();
       this.updateGameState(delta);
-      this.enemySystem.update(time);
+      if (this.enemySystem) {
+        this.enemySystem.update(time);
+      }
     }
   }
 
@@ -173,11 +245,20 @@ class GameScene extends BaseScene {
     // Temperature
     const tempChangeRate = this.getTempChangeRate(currentSpeed);
     const currentTemp = this.gameState.get("temp");
-    this.gameState.update(
-      "temp",
-      Phaser.Math.Clamp(currentTemp + (tempChangeRate * delta) / 1000, 50, 130)
-    );
-
+    const newTemp = Phaser.Math.Clamp(currentTemp + (tempChangeRate * delta) / 1000, 50, 130);
+  
+    // Check if temperature hits critical level
+    if (newTemp >= 130 && currentTemp < 130) {
+      this.events.emit("playerHit", {
+        x: this.playerSystem.player.x,
+        y: this.playerSystem.player.y
+      });
+      // Reset temperature after damage
+      this.gameState.update("temp", 50);
+    } else {
+      this.gameState.update("temp", newTemp);
+    }
+    
     // Fuel
     const fuelConsumptionRate = this.getFuelConsumptionRate(currentSpeed);
     const currentFuel = this.gameState.get("fuel");
@@ -187,14 +268,43 @@ class GameScene extends BaseScene {
     );
   }
 
-  shutdown() {
-    // Clean up groups and systems
-    if (this.explosions) this.explosions.destroy(true);
-    if (this.playerSystem) this.playerSystem.destroy();
-    if (this.collectibleSystem)
+  cleanup() {
+    // Destroy all systems properly
+    if (this.playerSystem) {
+      this.playerSystem.destroy();
+      this.playerSystem = null;
+    }
+
+    if (this.collectibleSystem) {
       this.collectibleSystem.collectibles.destroy(true);
-    if (this.obstacleSystem) this.obstacleSystem.obstacles.destroy(true);
-    if (this.enemySystem) this.enemySystem.enemies.destroy(true);
+      this.collectibleSystem = null;
+    }
+
+    if (this.obstacleSystem) {
+      this.obstacleSystem.obstacles.destroy(true);
+      this.obstacleSystem = null;
+    }
+
+    if (this.enemySystem) {
+      this.enemySystem.enemies.destroy(true);
+      this.enemySystem = null;
+    }
+
+    if (this.explosions) {
+      this.explosions.destroy(true);
+      this.explosions = null;
+    }
+
+    if (this.regionSystem) {
+      // Clean up region system
+      this.regionSystem.cleanup();
+      this.regionSystem = null;
+    }
+
+    // Reset game state
+    this.gameState.reset();
+
+    // Remove all event listeners
     this.events.removeAllListeners();
   }
 

@@ -23,30 +23,69 @@ class ObstacleSystem {
     obstacle.damage = config.damage;
     return obstacle;
   }
+
   handleCollision(player, obstacle) {
-    // Move all objects in scene AWAY from obstacle
+    // Calculate collision angle
     const angle = Phaser.Math.Angle.Between(
       obstacle.x,
       obstacle.y,
       player.x,
       player.y
     );
-    const pushDistance = -150;
+    const pushDistance = 150;
+    const safeDistance = 50; // Distance to place in front of obstacle
 
-    const allObjects = [
-      ...this.obstacles.getChildren(),
-      ...this.scene.collectibleSystem.collectibles.getChildren(),
-    ];
+    // Calculate push deltas
+    const dx = Math.cos(angle) * pushDistance;
+    const dy = Math.sin(angle) * pushDistance;
 
-    allObjects.forEach((obj) => {
-      obj.x += Math.cos(angle) * pushDistance;
-      obj.y += Math.sin(angle) * pushDistance;
-    });
+    // Check if bounce position would be in a valid region
+    const movementManager = this.scene.playerSystem.movementManager;
+    const currentWorldPos = movementManager.screenToWorld(player.x, player.y);
+    const nextWorldPos = {
+      x: currentWorldPos.x + dx,
+      y: currentWorldPos.y + dy,
+    };
+
+    // Try bounce first
+    if (movementManager.isPositionInAnyRegion(nextWorldPos)) {
+      movementManager.updateSceneElements(dx, dy);
+      movementManager.worldOffset.x += dx;
+      movementManager.worldOffset.y += dy;
+    } else {
+      // If bounce fails, place in front of obstacle
+      const safeDx = Math.cos(angle) * safeDistance;
+      const safeDy = Math.sin(angle) * safeDistance;
+      const safeWorldPos = {
+        x: currentWorldPos.x + safeDx,
+        y: currentWorldPos.y + safeDy,
+      };
+
+      // Verify safe position is in bounds
+      if (movementManager.isPositionInAnyRegion(safeWorldPos)) {
+        movementManager.updateSceneElements(safeDx, safeDy);
+        movementManager.worldOffset.x += safeDx;
+        movementManager.worldOffset.y += safeDy;
+      }
+    }
+
+    // Stop movement
+    this.gameState.update("speed", 0);
+
+    // Update region system
+    const playerWorldPos = movementManager.screenToWorld(player.x, player.y);
+    this.scene.regionSystem?.update(
+      playerWorldPos,
+      movementManager.worldOffset
+    );
+
+    // Calculate collision point for effects
     const collisionPoint = {
       x: (player.x + obstacle.x) / 2,
       y: (player.y + obstacle.y) / 2,
     };
 
+    // Emit collision event
     this.scene.events.emit("playerHit", collisionPoint);
   }
 
@@ -59,6 +98,5 @@ class ObstacleSystem {
       this
     );
   }
-  
 }
 export { ObstacleSystem };

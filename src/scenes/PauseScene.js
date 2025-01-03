@@ -1,4 +1,3 @@
-// Pause menu scene
 import { BaseScene } from "./BaseScene.js";
 class PauseScene extends BaseScene {
   constructor() {
