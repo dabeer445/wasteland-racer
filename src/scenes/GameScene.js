@@ -4,6 +4,7 @@ import { CollectibleSystem } from "../systems/CollectibleSystem.js";
 import { ObstacleSystem } from "../systems/ObstacleSystem.js";
 import { RegionSystem } from "../systems/RegionSystem.js";
 import { EnemySystem } from "../systems/EnemySystem.js";
+import { MinimapSystem } from "../systems/MiniMapSystem.js";
 import { BaseScene } from "./BaseScene.js";
 import { GameState } from "../GameState.js";
 
@@ -32,7 +33,6 @@ class GameScene extends BaseScene {
 
     this.physics.world.setBounds(0, 0, 2400, 2400);
     this.cameras.main.setBounds(0, 0, 2400, 2400);
-
     //Initialize sounds
     this.sounds = {
       accelerate: this.sound.add("accelerate", { loop: true }),
@@ -62,11 +62,13 @@ class GameScene extends BaseScene {
     // Finally update spawn point
     this.spawnPoint = this.regionSystem.getRandomSpawnPoint();
     this.playerSystem.respawnPlayer(this.spawnPoint);
+    
+    this.minimapSystem = new MinimapSystem(this, this.playerSystem.movementManager, this.regionSystem.getBoundingBoxOfAll());
 
     // Initialize systems
     this.collectibleSystem = new CollectibleSystem(this, this.gameState);
     this.obstacleSystem = new ObstacleSystem(this, this.gameState);
-    this.enemySystem = new EnemySystem(this);
+    // this.enemySystem = new EnemySystem(this);
     this.explosions = this.add.group();
 
     // Setup collisions
@@ -97,7 +99,7 @@ class GameScene extends BaseScene {
 
     this.registerEvents();
 
-    this.addDebugCenter();
+    // this.addDebugCenter();
   }
 
   registerEvents() {
@@ -144,6 +146,7 @@ class GameScene extends BaseScene {
   addDebugCenter() {
     // Create a graphics object for the debug circle
     this.debugCenter = this.add.graphics();
+    this.debugCenter.setDepth(4);
     this.debugCenter.lineStyle(2, 0xff0000); // Red outline
     this.debugCenter.strokeCircle(
       this.cameras.main.centerX,
@@ -173,50 +176,32 @@ class GameScene extends BaseScene {
   }
 
   spawnItems(itemSystem) {
+    console.log("World bounds:", this.physics.world.bounds);
     for (const [type, config] of Object.entries(itemSystem.types)) {
       for (let i = 0; i < config.density; i++) {
         const position = this.getValidPosition();
-        if (position) {
-          itemSystem.spawn(type, position.x, position.y);
-        }
+        const item = itemSystem.spawn(type, position.x, position.y);
       }
     }
   }
 
   getValidPosition(margin = 50, minDistance = 100) {
-    const maxAttempts = 50;
-    let attempts = 0;
+    const randomRegion = Phaser.Utils.Array.GetRandom(
+      this.regionSystem.regions
+    );
+    const rawPoint = this.regionSystem.generateRandomPointInPolygon(
+      randomRegion.polygon
+    );
 
-    while (attempts < maxAttempts) {
-      // Get a random region
-      const randomRegion = Phaser.Utils.Array.GetRandom(
-        this.regionSystem.regions
-      );
-
-      // Generate position within region bounds
-      const x = Phaser.Math.Between(
-        randomRegion.regionX + margin,
-        randomRegion.regionX + randomRegion.regionWidth - margin
-      );
-      const y = Phaser.Math.Between(
-        randomRegion.regionY + margin,
-        randomRegion.regionY + randomRegion.regionHeight - margin
-      );
-
-      // Check distance from player start position
-      const distanceFromStart = Phaser.Math.Distance.Between(
-        x,
-        y,
-        this.playerSystem.spawnPoint.x,
-        this.playerSystem.spawnPoint.y
-      );
-
-      if (distanceFromStart > minDistance) {
-        return { x, y };
-      }
-      attempts++;
+    // Adjust for world offset from movement manager
+    if (this.playerSystem.movementManager) {
+      const worldOffset = this.playerSystem.movementManager.worldOffset;
+      return {
+        x: rawPoint.x - worldOffset.x,
+        y: rawPoint.y - worldOffset.y,
+      };
     }
-    return null;
+    return rawPoint;
   }
 
   update(time, delta) {
@@ -225,6 +210,9 @@ class GameScene extends BaseScene {
       this.updateGameState(delta);
       if (this.enemySystem) {
         this.enemySystem.update(time);
+      }
+      if (this.minimapSystem) {
+        this.minimapSystem.update();
       }
     }
   }
@@ -245,20 +233,24 @@ class GameScene extends BaseScene {
     // Temperature
     const tempChangeRate = this.getTempChangeRate(currentSpeed);
     const currentTemp = this.gameState.get("temp");
-    const newTemp = Phaser.Math.Clamp(currentTemp + (tempChangeRate * delta) / 1000, 50, 130);
-  
+    const newTemp = Phaser.Math.Clamp(
+      currentTemp + (tempChangeRate * delta) / 1000,
+      50,
+      130
+    );
+
     // Check if temperature hits critical level
     if (newTemp >= 130 && currentTemp < 130) {
       this.events.emit("playerHit", {
         x: this.playerSystem.player.x,
-        y: this.playerSystem.player.y
+        y: this.playerSystem.player.y,
       });
       // Reset temperature after damage
       this.gameState.update("temp", 50);
     } else {
       this.gameState.update("temp", newTemp);
     }
-    
+
     // Fuel
     const fuelConsumptionRate = this.getFuelConsumptionRate(currentSpeed);
     const currentFuel = this.gameState.get("fuel");

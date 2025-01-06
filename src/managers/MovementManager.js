@@ -129,10 +129,6 @@ class MovementManager {
     return this.scene.regionSystem.regions.some(
       (region) =>
         this.scene.regionSystem.isInRegion(position,region)
-        // position.x >= region.regionX &&
-        // position.x <= region.regionX + region.regionWidth &&
-        // position.y >= region.regionY &&
-        // position.y <= region.regionY + region.regionHeight
     );
   }
 

@@ -130,7 +130,17 @@ body {
 .map {
   height: 250px;
   padding: 10px 0;
+  position: relative;
 }
 .map > img {
   height: 250px;
+}
+
+
+.dot{
+  position: absolute ;
+  width: 8px;
+  height: 8px;
+  background: red;
+  border-radius: 50%;
 }

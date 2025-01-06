@@ -6,11 +6,11 @@ class ObstacleSystem {
     this.obstacles = scene.physics.add.group();
 
     this.types = {
-      tree: { sprite: "tree", scale: 1, damage: 25, density: 10 },
-      rock: { sprite: "rock", scale: 1, damage: 35, density: 10 },
-      missile: { sprite: "missile", scale: 1, damage: 50, density: 10 },
-      steel: { sprite: "steel", scale: 1, damage: 50, density: 10 },
-      building: { sprite: "building", scale: 1, damage: 50, density: 10 },
+      tree: { sprite: "tree", scale: 1, damage: 25, density: 5 },
+      rock: { sprite: "rock", scale: 1, damage: 35, density: 5 },
+      missile: { sprite: "missile", scale: 1, damage: 50, density: 5 },
+      steel: { sprite: "steel", scale: 1, damage: 50, density: 5 },
+      building: { sprite: "building", scale: 1, damage: 50, density: 5 },
     };
   }
 

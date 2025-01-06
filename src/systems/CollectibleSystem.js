@@ -58,7 +58,6 @@ class CollectibleSystem {
     const collectible = new Collectible(this.scene, x, y, type, config);
     this.scene.add.existing(collectible); // Add this line
     this.collectibles.add(collectible);
-
     return collectible;
   }
 
