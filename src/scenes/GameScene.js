@@ -195,11 +195,12 @@ class GameScene extends BaseScene {
 
     // Adjust for world offset from movement manager
     if (this.playerSystem.movementManager) {
-      const worldOffset = this.playerSystem.movementManager.worldOffset;
-      return {
-        x: rawPoint.x - worldOffset.x,
-        y: rawPoint.y - worldOffset.y,
-      };
+      // const worldOffset = this.playerSystem.movementManager.worldOffset;
+      // return {
+      //   x: rawPoint.x - worldOffset.x,
+      //   y: rawPoint.y - worldOffset.y,
+      // };
+      return this.playerSystem.movementManager.worldToScreen(rawPoint.x,  rawPoint.y);
     }
     return rawPoint;
   }
