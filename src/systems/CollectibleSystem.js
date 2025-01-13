@@ -27,7 +27,7 @@ class CollectibleSystem {
       fuel: {
         sprite: "fuel",
         scale: 0.75,
-        density: 15,
+        density: 11,
         onCollect: () => {
           this.gameState.update(
             "fuel",
@@ -42,7 +42,7 @@ class CollectibleSystem {
       case: {
         sprite: "case",
         scale: 1,
-        density: 15,
+        density: 11,
         onCollect: () => {
           this.gameState.update(
             "casesCollected",

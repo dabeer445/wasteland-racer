@@ -62,8 +62,12 @@ class GameScene extends BaseScene {
     // Finally update spawn point
     this.spawnPoint = this.regionSystem.getRandomSpawnPoint();
     this.playerSystem.respawnPlayer(this.spawnPoint);
-    
-    this.minimapSystem = new MinimapSystem(this, this.playerSystem.movementManager, this.regionSystem.getBoundingBoxOfAll());
+
+    this.minimapSystem = new MinimapSystem(
+      this,
+      this.playerSystem.movementManager,
+      this.regionSystem.getBoundingBoxOfAll()
+    );
 
     // Initialize systems
     this.collectibleSystem = new CollectibleSystem(this, this.gameState);
@@ -176,25 +180,82 @@ class GameScene extends BaseScene {
   }
 
   spawnItems(itemSystem) {
-    for (const [type, config] of Object.entries(itemSystem.types)) {
-      for (let i = 0; i < config.density; i++) {
-        const position = this.getValidPosition();
-        const item = itemSystem.spawn(type, position.x, position.y);
+    const itemSize = 32;
+    if (!this.spawnedPositions) {
+      this.spawnedPositions = [];
+    }
+  
+    const isOverlapping = (pos) => {
+      return this.spawnedPositions.some(existing => 
+        Phaser.Math.Distance.Between(pos.x, pos.y, existing.x, existing.y) < itemSize * 2
+      );
+    };
+  
+    const getValidSpawnPoint = (region) => {
+      let attempts = 0;
+      let position;
+      
+      do {
+        const rawPoint = this.regionSystem.generateRandomPointInPolygon(region.polygon);
+        position = this.playerSystem.movementManager 
+          ? this.playerSystem.movementManager.worldToScreen(rawPoint.x, rawPoint.y)
+          : rawPoint;
+        attempts++;
+      } while (isOverlapping(position) && attempts < 50);
+  
+      return attempts < 50 ? position : null;
+    };
+  
+    if (itemSystem instanceof CollectibleSystem) {
+      this.regionSystem.regions.forEach(region => {
+        Object.keys(itemSystem.types).forEach(type => {
+          const position = getValidSpawnPoint(region);
+          if (position) {
+            itemSystem.spawn(type, position.x, position.y);
+            this.spawnedPositions.push(position);
+          }
+        });
+      });
+    } else {
+      for (const [type, config] of Object.entries(itemSystem.types)) {
+        for (let i = 0; i < config.density; i++) {
+          const position = this.getValidPosition();
+          if (!isOverlapping(position)) {
+            itemSystem.spawn(type, position.x, position.y);
+            this.spawnedPositions.push(position);
+          }
+        }
       }
     }
   }
 
   getValidPosition(margin = 50, minDistance = 100) {
-    const randomRegion = Phaser.Utils.Array.GetRandom(
-      this.regionSystem.regions
-    );
+    // Calculate areas and create weighted distribution
+    const regionWeights = this.regionSystem.regions.map((region) => {
+      return { region, area: region.polygon.area };
+    });
+
+    const totalArea = regionWeights.reduce((sum, { area }) => sum + area, 0);
+    const weights = regionWeights.map(({ area }) => area / totalArea);
+
+    // Select region based on weighted probability
+    const random = Math.random();
+    let sum = 0;
+    const selectedRegion = regionWeights.find(({ area }, index) => {
+      sum += weights[index];
+      return random <= sum;
+    }).region;
+
     const rawPoint = this.regionSystem.generateRandomPointInPolygon(
-      randomRegion.polygon
+      selectedRegion.polygon
     );
 
     // Adjust for world offset from movement manager
     if (this.playerSystem.movementManager) {
-      return this.playerSystem.movementManager.worldToScreen(rawPoint.x,  rawPoint.y);
+      return this.playerSystem.movementManager.worldToScreen(
+        rawPoint.x,
+        rawPoint.y
+      );
     }
     return rawPoint;
   }
