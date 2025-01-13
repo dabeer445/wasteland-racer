@@ -183,7 +183,7 @@ class RegionSystem {
     this.scene = scene;
     this.gameState = gameState;
     this.regions = [];
-    this.scale = 5;
+    this.scale = 45;
     this.setupRegions();
     this.setupDebugGraphics();
   }

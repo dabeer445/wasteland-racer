@@ -68,7 +68,7 @@ class GameScene extends BaseScene {
     // Initialize systems
     this.collectibleSystem = new CollectibleSystem(this, this.gameState);
     this.obstacleSystem = new ObstacleSystem(this, this.gameState);
-    // this.enemySystem = new EnemySystem(this);
+    this.enemySystem = new EnemySystem(this);
     this.explosions = this.add.group();
 
     // Setup collisions
@@ -176,7 +176,6 @@ class GameScene extends BaseScene {
   }
 
   spawnItems(itemSystem) {
-    console.log("World bounds:", this.physics.world.bounds);
     for (const [type, config] of Object.entries(itemSystem.types)) {
       for (let i = 0; i < config.density; i++) {
         const position = this.getValidPosition();
@@ -195,11 +194,6 @@ class GameScene extends BaseScene {
 
     // Adjust for world offset from movement manager
     if (this.playerSystem.movementManager) {
-      // const worldOffset = this.playerSystem.movementManager.worldOffset;
-      // return {
-      //   x: rawPoint.x - worldOffset.x,
-      //   y: rawPoint.y - worldOffset.y,
-      // };
       return this.playerSystem.movementManager.worldToScreen(rawPoint.x,  rawPoint.y);
     }
     return rawPoint;
