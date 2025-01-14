@@ -183,7 +183,7 @@ class RegionSystem {
     this.scene = scene;
     this.gameState = gameState;
     this.regions = [];
-    this.scale = 45;
+    this.scale = 5;
     this.setupRegions();
     this.setupDebugGraphics();
   }
@@ -264,7 +264,7 @@ class RegionSystem {
     this.debugTexts = [];
 
     this.regions.forEach((region) => {
-      region.polygon = Phaser.Geom.Polygon.Simplify(region.polygon)
+      // region.polygon = Phaser.Geom.Polygon.Simplify(region.polygon)
       this.debugGraphics.lineStyle(2, region.color || 0xff0000);
       this.debugGraphics.fillStyle(region.color || 0xff0000, 0.5); // 0.2 is alpha/opacity
       this.debugGraphics.beginPath();

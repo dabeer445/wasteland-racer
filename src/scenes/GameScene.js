@@ -4,6 +4,7 @@ import { CollectibleSystem } from "../systems/CollectibleSystem.js";
 import { ObstacleSystem } from "../systems/ObstacleSystem.js";
 import { RegionSystem } from "../systems/RegionSystem.js";
 import { EnemySystem } from "../systems/EnemySystem.js";
+import { FPSDisplay } from "../systems/FPSDisplay.js";
 import { MinimapSystem } from "../systems/MiniMapSystem.js";
 import { BaseScene } from "./BaseScene.js";
 import { GameState } from "../GameState.js";
@@ -27,6 +28,7 @@ class GameScene extends BaseScene {
       this.scene.restart();
       return;
     }
+    this.fpsDisplay = new FPSDisplay(this);
 
     // Setup scene basics first
     this.addBackground();
@@ -184,31 +186,38 @@ class GameScene extends BaseScene {
     if (!this.spawnedPositions) {
       this.spawnedPositions = [];
     }
-  
+
     const isOverlapping = (pos) => {
-      return this.spawnedPositions.some(existing => 
-        Phaser.Math.Distance.Between(pos.x, pos.y, existing.x, existing.y) < itemSize * 2
+      return this.spawnedPositions.some(
+        (existing) =>
+          Phaser.Math.Distance.Between(pos.x, pos.y, existing.x, existing.y) <
+          itemSize * 2
       );
     };
-  
+
     const getValidSpawnPoint = (region) => {
       let attempts = 0;
       let position;
-      
+
       do {
-        const rawPoint = this.regionSystem.generateRandomPointInPolygon(region.polygon);
-        position = this.playerSystem.movementManager 
-          ? this.playerSystem.movementManager.worldToScreen(rawPoint.x, rawPoint.y)
+        const rawPoint = this.regionSystem.generateRandomPointInPolygon(
+          region.polygon
+        );
+        position = this.playerSystem.movementManager
+          ? this.playerSystem.movementManager.worldToScreen(
+              rawPoint.x,
+              rawPoint.y
+            )
           : rawPoint;
         attempts++;
       } while (isOverlapping(position) && attempts < 50);
-  
+
       return attempts < 50 ? position : null;
     };
-  
+
     if (itemSystem instanceof CollectibleSystem) {
-      this.regionSystem.regions.forEach(region => {
-        Object.keys(itemSystem.types).forEach(type => {
+      this.regionSystem.regions.forEach((region) => {
+        Object.keys(itemSystem.types).forEach((type) => {
           const position = getValidSpawnPoint(region);
           if (position) {
             itemSystem.spawn(type, position.x, position.y);
@@ -347,6 +356,11 @@ class GameScene extends BaseScene {
       // Clean up region system
       this.regionSystem.cleanup();
       this.regionSystem = null;
+    }
+
+    if (this.fpsDisplay) {
+      this.fpsDisplay.destroy();
+      this.fpsDisplay = null;
     }
 
     // Reset game state
