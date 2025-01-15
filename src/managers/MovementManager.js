@@ -61,6 +61,11 @@ class MovementManager {
       nextWorldPos.y += dy;
 
       if (!this.isPositionInAnyRegion(nextWorldPos)) {
+        this.player.angle = this.player.angle + 180;
+        newSpeed *= 0.5;
+        this.gameState.update("speed", newSpeed);
+        this.scene.sounds.crash.play();
+        this.scene.cameras.main.shake(200, 0.02);
         return;
       }
 
@@ -85,10 +90,12 @@ class MovementManager {
 
     // Get all game objects safely
     const gameObjects = [];
-    
+
     try {
       if (this.scene.collectibleSystem?.collectibles) {
-        gameObjects.push(...this.scene.collectibleSystem.collectibles.getChildren());
+        gameObjects.push(
+          ...this.scene.collectibleSystem.collectibles.getChildren()
+        );
       }
       if (this.scene.obstacleSystem?.obstacles) {
         gameObjects.push(...this.scene.obstacleSystem.obstacles.getChildren());
@@ -100,11 +107,11 @@ class MovementManager {
         gameObjects.push(...this.scene.explosions.getChildren());
       }
     } catch (error) {
-      console.warn('Some game objects not available during scene transition');
+      console.warn("Some game objects not available during scene transition");
     }
 
     // Update positions relative to world movement
-    gameObjects.forEach(obj => {
+    gameObjects.forEach((obj) => {
       if (obj && obj.x !== undefined && obj.y !== undefined) {
         obj.x -= dx;
         obj.y -= dy;
@@ -126,9 +133,8 @@ class MovementManager {
   }
 
   isPositionInAnyRegion(position) {
-    return this.scene.regionSystem.regions.some(
-      (region) =>
-        this.scene.regionSystem.isInRegion(position,region)
+    return this.scene.regionSystem.regions.some((region) =>
+      this.scene.regionSystem.isInRegion(position, region)
     );
   }
 
