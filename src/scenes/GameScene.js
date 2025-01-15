@@ -106,9 +106,19 @@ class GameScene extends BaseScene {
     this.registerEvents();
 
     // this.addDebugCenter();
+    this.time.addEvent({
+      delay: 1000,
+      callback: () => this.gameState.update("score", this.gameState.get("score") + 10),
+      loop: true
+    });
   }
 
   registerEvents() {
+    this.events.removeListener("gameWin");
+    this.events.on("gameWin", () => {
+      this.scene.start("GameWinScene");
+    });
+
     this.events.removeListener("gameOver");
     this.events.on("gameOver", () => {
       this.scene.start("GameOverScene");

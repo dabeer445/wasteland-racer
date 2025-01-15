@@ -59,12 +59,17 @@ class MovementManager {
       const nextWorldPos = this.screenToWorld(this.player.x, this.player.y);
       nextWorldPos.x += dx;
       nextWorldPos.y += dy;
+      if (this.scene.sounds.skid.isPlaying) {
+        this.scene.sounds.skid.stop();
+      }
 
       if (!this.isPositionInAnyRegion(nextWorldPos)) {
         this.player.angle = this.player.angle + 180;
         newSpeed *= 0.5;
         this.gameState.update("speed", newSpeed);
-        this.scene.sounds.crash.play();
+        if (!this.scene.sounds.skid.isPlaying) {
+          this.scene.sounds.skid.play();
+        }
         this.scene.cameras.main.shake(200, 0.02);
         return;
       }

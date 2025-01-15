@@ -21,7 +21,7 @@ class LoadingScene extends Phaser.Scene {
       "missile",
       "steel",
       "building",
-
+      "complete",
       "map",
     ].forEach((asset) => {
       this.load.image(asset, `assets/${asset}.png`);
@@ -35,6 +35,7 @@ class LoadingScene extends Phaser.Scene {
       "idle",
       "refuel",
       "topspeed",
+      "skid",
     ];
     audioFiles.forEach((audio) => {
       this.load.audio(audio, `assets/audio/${audio}.mp3`);
@@ -45,8 +46,8 @@ class LoadingScene extends Phaser.Scene {
     spriteSheets.forEach((spriteSheet) => {
       this.load.spritesheet(spriteSheet, `assets/${spriteSheet}.png`, {
         frameWidth: 75,
-        frameHeight: 49
-        });
+        frameHeight: 49,
+      });
     });
 
     // Loading bar

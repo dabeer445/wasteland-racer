@@ -36,7 +36,6 @@ class CollectibleSystem {
           if (!this.scene.sounds.refuel.isPlaying) {
             this.scene.sounds.refuel.play();
           }
-          this.gameState.update("score", this.gameState.get("score") + 10);
         },
       },
       case: {
@@ -44,10 +43,12 @@ class CollectibleSystem {
         scale: 1,
         density: 11,
         onCollect: () => {
-          this.gameState.update(
-            "casesCollected",
-            this.gameState.get("casesCollected") + 1
-          );
+          let collectedCases = this.gameState.get("casesCollected");
+          if (collectedCases == this.types.case.density - 1) {
+            this.scene.events.emit("gameWin");
+          }
+          this.gameState.update("casesCollected", collectedCases + 1);
+          this.gameState.update("score", this.gameState.get("score") + 1000);
         },
       },
     };
