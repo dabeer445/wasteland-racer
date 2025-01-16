@@ -43,6 +43,7 @@ class GameScene extends BaseScene {
       idle: this.sound.add("idle", { loop: true }),
       refuel: this.sound.add("refuel", { loop: false }),
       topspeed: this.sound.add("topspeed", { loop: true, volume: 5 }),
+      skid: this.sound.add("skid", { loop: false }),
     };
     this.anims.create({
       key: "explode",
@@ -108,8 +109,9 @@ class GameScene extends BaseScene {
     // this.addDebugCenter();
     this.time.addEvent({
       delay: 1000,
-      callback: () => this.gameState.update("score", this.gameState.get("score") + 10),
-      loop: true
+      callback: () =>
+        this.gameState.update("score", this.gameState.get("score") + 10),
+      loop: true,
     });
   }
 
