@@ -144,3 +144,20 @@ body {
   background: red;
   border-radius: 50%;
 }
+
+#radar-container {
+  text-align: center;
+}
+
+#radar-canvas {
+  width: 90px; /* Square size */
+  height: 90px;
+  background-color: black;
+  border: 1px solid #00ff00; /* Green border */
+}
+
+.radar-title {
+  font-size: 16px;
+  color: #ffffff;
+  margin-bottom: 10px;
+}

@@ -6,6 +6,7 @@ import { RegionSystem } from "../systems/RegionSystem.js";
 import { EnemySystem } from "../systems/EnemySystem.js";
 import { FPSDisplay } from "../systems/FPSDisplay.js";
 import { MinimapSystem } from "../systems/MiniMapSystem.js";
+import { RadarSystem } from "../systems/RadarSystem.js"; // Add this import
 import { BaseScene } from "./BaseScene.js";
 import { GameState } from "../GameState.js";
 
@@ -77,6 +78,13 @@ class GameScene extends BaseScene {
     this.obstacleSystem = new ObstacleSystem(this, this.gameState);
     this.enemySystem = new EnemySystem(this);
     this.explosions = this.add.group();
+
+     // Initialize radar system
+     this.radarSystem = new RadarSystem(
+      this,
+      this.playerSystem.player,
+      this.enemySystem.enemies
+    );
 
     // Setup collisions
     if (this.collectibleSystem) {
@@ -291,6 +299,10 @@ class GameScene extends BaseScene {
       if (this.minimapSystem) {
         this.minimapSystem.update();
       }
+      // Update radar system
+      if (this.radarSystem) {
+        this.radarSystem.update();
+      }
     }
   }
 
@@ -375,6 +387,10 @@ class GameScene extends BaseScene {
       this.fpsDisplay = null;
     }
 
+    if (this.radarSystem) {
+      this.radarSystem.destroy();
+      this.radarSystem = null;
+    }
     // Reset game state
     this.gameState.reset();
 

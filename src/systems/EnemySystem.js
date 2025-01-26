@@ -20,7 +20,27 @@ class EnemySystem {
       this.spawnEnemy();
       this.spawnTime = time + this.config.spawnInterval;
     }
+
+    // Check and destroy off-screen enemies
+    this.enemies.getChildren().forEach((enemy) => {
+      if (this.isEnemyOutOfBounds(enemy)) {
+        enemy.destroy();
+      }
+    });
   }
+
+  isEnemyOutOfBounds(enemy) {
+    const { width, height } = this.scene.physics.world.bounds;
+    const padding = 100; // Add some padding to ensure enemies are fully out of bounds
+
+    return (
+      enemy.x < -padding ||
+      enemy.x > width + padding ||
+      enemy.y < -padding ||
+      enemy.y > height + padding
+    );
+  }
+
   setupCollisions(player) {
     this.scene.physics.add.overlap(
       player,
