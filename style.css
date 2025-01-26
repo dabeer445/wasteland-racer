@@ -128,22 +128,39 @@ body {
 }
 
 .map {
-  height: 250px;
-  padding: 10px 0;
+  width: 200px; /* Fixed width */
+  height: 200px; /* Fixed height */
+  overflow: hidden; /* Hide overflowing parts */
+}
+
+#minimap-canvas {
+  width: 100%; /* Fill the container */
+  height: 100%;
+}
+
+/* 
+.map {
   position: relative;
-}
-.map > img {
-  height: 250px;
+  width: 200px; 
+  height: 250px; 
+  overflow: hidden;
+  border: 2px solid #00ff00;
+  border-radius: 8px; 
 }
 
+.map-image {
+  width: 100%; 
+  height: auto; 
+  object-fit: cover; 
+}
 
-.dot{
-  position: absolute ;
+.dot {
+  position: absolute;
   width: 10px;
   height: 10px;
   background: red;
   border-radius: 50%;
-}
+} */
 
 #radar-container {
   text-align: center;

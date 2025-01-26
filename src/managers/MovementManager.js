@@ -123,6 +123,7 @@ class MovementManager {
       }
     });
   }
+  
   screenToWorld(screenX, screenY) {
     return {
       x: screenX + this.worldOffset.x,

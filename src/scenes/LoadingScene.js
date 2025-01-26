@@ -23,6 +23,7 @@ class LoadingScene extends Phaser.Scene {
       "building",
       "complete",
       "map",
+      "ukMap"
     ].forEach((asset) => {
       this.load.image(asset, `assets/${asset}.png`);
     });

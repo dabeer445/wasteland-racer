@@ -38,10 +38,10 @@ class BaseScene extends Phaser.Scene {
     document.getElementById("fuel-fill").style.backgroundColor =
       gameState.fuel < 25 ? "#ff0000" : "#00ff00";
 
-    // Update Region
-    document.getElementById(
-      "current-region"
-    ).textContent = `Current Region: ${gameState.currentRegion}`;
+    // // Update Region
+    // document.getElementById(
+    //   "current-region"
+    // ).textContent = `Current Region: ${gameState.currentRegion}`;
 
     // Update lives
     const lifeIcons = document.querySelectorAll(".life-icon");

@@ -304,11 +304,13 @@ class RegionSystem {
       if (this.isInRegion(playerWorldPos, region)) {
         if (this.gameState.get("currentRegion") !== region.name) {
           this.gameState.update("currentRegion", region.name);
+          this.scene.events.emit("updateRegion");
         }
         return;
       }
     }
-    this.gameState.update("currentRegion", "Unknown");
+    this.gameState.update("currentRegion", "Unknown");    
+    this.scene.events.emit("updateRegion");
   }
 
   getRandomSpawnPoint() {

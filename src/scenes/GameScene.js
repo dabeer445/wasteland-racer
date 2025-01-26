@@ -68,9 +68,10 @@ class GameScene extends BaseScene {
     this.playerSystem.respawnPlayer(this.spawnPoint);
 
     this.minimapSystem = new MinimapSystem(
-      this,
-      this.playerSystem.movementManager,
-      this.regionSystem.getBoundingBoxOfAll()
+      this, // Scene
+      this.playerSystem.movementManager, // MovementManager
+      this.regionSystem.getBoundingBoxOfAll(),
+      this.spawnPoint
     );
 
     // Initialize systems
@@ -78,13 +79,6 @@ class GameScene extends BaseScene {
     this.obstacleSystem = new ObstacleSystem(this, this.gameState);
     this.enemySystem = new EnemySystem(this);
     this.explosions = this.add.group();
-
-     // Initialize radar system
-     this.radarSystem = new RadarSystem(
-      this,
-      this.playerSystem.player,
-      this.enemySystem.enemies
-    );
 
     // Setup collisions
     if (this.collectibleSystem) {
@@ -97,6 +91,12 @@ class GameScene extends BaseScene {
     }
     if (this.enemySystem) {
       this.enemySystem.setupCollisions(this.playerSystem.player);
+      // Initialize radar system
+      this.radarSystem = new RadarSystem(
+        this,
+        this.playerSystem.player,
+        this.enemySystem.enemies
+      );
     }
 
     // Set up pause functionality
@@ -115,6 +115,10 @@ class GameScene extends BaseScene {
     this.registerEvents();
 
     // this.addDebugCenter();
+
+    // Add text to display the current region
+    this.addRegionText();
+
     this.time.addEvent({
       delay: 1000,
       callback: () =>
@@ -122,8 +126,31 @@ class GameScene extends BaseScene {
       loop: true,
     });
   }
+  addRegionText() {
+    // Create a text object to display the current region
+    this.regionText = this.add.text(
+      this.cameras.main.centerX, // X position (center of the screen)
+      20, // Y position (20 pixels from the top)
+      `Region: ${this.gameState.get("currentRegion")}`, // Initial text
+      {
+        fontFamily: "Arial",
+        fontSize: "18px",
+        fill: "#000000",
+        padding: { x: 10, y: 5 },
+      }
+    );
+
+    // Center the text horizontally
+    this.regionText.setOrigin(0.5, 0);
+
+  }
 
   registerEvents() {
+    this.events.removeListener("updateRegion");
+    this.events.on("updateRegion", () => {
+      this.regionText.setText(`Region: ${this.gameState.get("currentRegion")}`);
+    });
+
     this.events.removeListener("gameWin");
     this.events.on("gameWin", () => {
       this.scene.start("GameWinScene");
