@@ -427,8 +427,8 @@ class GameScene extends BaseScene {
 
   getTempChangeRate(speed) {
     const rates = {
-      0: -3,
-      1: -1,
+      0: -5,
+      1: -2,
       2: -0.5,
       3: -0.2,
       4: 0.5,
@@ -437,7 +437,7 @@ class GameScene extends BaseScene {
       7: 1.2,
       8: 1.5,
       9: 1.6,
-      10: 2.5,
+      10: 1.9,
     };
     return rates[speed] || 0;
   }
