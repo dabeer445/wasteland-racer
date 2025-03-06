@@ -7,7 +7,7 @@ class EnemySystem {
     this.config = {
       speed: 5,
       spawnInterval: 3000,
-      maxEnemies: 10,
+      maxEnemies: 50,
     };
     this.gameState = gameState;
   }

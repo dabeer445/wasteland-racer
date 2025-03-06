@@ -1,4 +1,4 @@
-import { regionPaths } from "../../regionPath.js";
+import { regionPaths } from "../regionPath.js";
 class RandomPolygonPoint {
   constructor(vertices) {
     if (vertices.length < 3) {
@@ -183,7 +183,7 @@ class RegionSystem {
     this.scene = scene;
     this.gameState = gameState;
     this.regions = [];
-    this.scale = 5;
+    this.scale = 45;
     this.setupRegions();
     this.setupDebugGraphics();
   }
